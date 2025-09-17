@@ -1,9 +1,7 @@
 # X Bookmark Summarizer
 
 ## 概要
-このアプリケーションは、X（旧Twitter）でブックマークした投稿を取得し、OpenAI APIを利用して要約します。
-要約結果はNotionに保存され、LINEで通知されます。
-日次自動実行や、Windows上でのローカル運用も可能です。
+このアプリケーションは、X（旧Twitter）でブックマークした投稿を取得し、OpenAI APIを利用して要約した結果をNotionに保存します。
 
 ## フォルダ構成
 ```
