@@ -31,6 +31,7 @@ x_bookmark_summary
 
 
 ## 環境変数 (.env)
+下記の情報を記載した.envファイルを作成してください
 - CLIENT_ID: X API クライアント情報
 - CLIENT_SECRET: X API クライアント情報
 - REFRESH_TOKEN: X API OAuth2.0 User Context トークン
