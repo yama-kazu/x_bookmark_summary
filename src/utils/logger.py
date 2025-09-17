@@ -5,8 +5,12 @@ import sys
 def get_logger(name: str):
     """
     標準出力にログを出力するロガーを取得
-    :param name: ロガー名
-    :return: logging.Logger
+
+    Args:
+        name (str): ロガー名
+
+    Returns:
+        logging.Logger
     """
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)

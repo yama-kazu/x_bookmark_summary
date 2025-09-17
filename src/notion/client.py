@@ -13,7 +13,9 @@ class NotionClient:
     def __init__(self, token: str = None):
         """
         Notion API クライアントの初期化
-        :param token: Notion Integration Token。省略時は .env の NOTION_API_KEY を使用
+
+        Args:
+            token (str): Notion Integration Token。省略時は .env の NOTION_API_KEY を使用
         """
         self.token = token or os.getenv("NOTION_API_KEY")
         if not self.token:
@@ -28,20 +30,25 @@ class NotionClient:
     def get_database(self, database_id: str):
         """データベース情報を取得"""
         url = f"{self.base_url}/databases/{database_id}"
-        resp = requests.get(url, headers=self.headers)
-        if resp.status_code != 200:
-            logger.error(f"Failed to get database: {resp.text}")
+        response = requests.get(url, headers=self.headers)
+        if response.status_code != 200:
+            logger.error(f"Failed to get database: {response.text}")
             return None
-        return resp.json()
+        return response.json()
 
     def append_page(
         self, parent_database_id: str, properties: dict, children: list = None
     ):
         """
         データベースにページを追加
-        :param parent_database_id: 追加先データベースID
-        :param properties: ページのプロパティ
-        :param children: ブロックの内容
+
+        Args:
+            parent_database_id (str): 追加先データベースID
+            properties (dict): ページのプロパティ
+            children (list): ブロックの内容
+
+        Returns:
+            dict: 作成されたページの情報
         """
         url = f"{self.base_url}/pages"
         payload = {
@@ -51,8 +58,8 @@ class NotionClient:
         if children:
             payload["children"] = children
 
-        resp = requests.post(url, headers=self.headers, json=payload)
-        if resp.status_code != 200:
-            logger.error(f"Failed to create page: {resp.text}")
+        response = requests.post(url, headers=self.headers, json=payload)
+        if response.status_code != 200:
+            logger.error(f"Failed to create page: {response.text}")
             return None
-        return resp.json()
+        return response.json()

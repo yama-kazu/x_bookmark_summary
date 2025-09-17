@@ -22,11 +22,11 @@ def summarize_tweets(tweets, model="gpt-4o", max_results=7):
     必要に応じてWeb検索を行い、最新情報を取得します。
 
     Args:
-        tweets (list): Xのブックマークデータのリスト
+        tweets (list[dict]): Xのブックマークデータのリスト
         model (str): 使用するOpenAIモデル
         max_results (int): 要約するツイートの最大件数
     Returns:
-        要約結果のリスト
+        summaries (list[dict]): 要約結果のリスト
     """
     summaries = []
     for tweet in tweets[:max_results]:
@@ -41,10 +41,16 @@ def summarize_tweets(tweets, model="gpt-4o", max_results=7):
                 input="以下の投稿内容および添付されているWebページの内容を要約してください。\n"
                 + text,
                 tools=[{"type": "web_search"}],  # Web検索を含むツールを指定
-                max_tokens=1000,
+                max_output_tokens=10000,
             )
             summary = response.output_text.strip()
-            summaries.append({"id": tweet["id"], "summary": summary})
+            summaries.append(
+                {
+                    "id": tweet["id"],
+                    "text": tweet["text"],
+                    "summary": summary,
+                }
+            )
         except Exception as e:
             logger.error(f"Error summarizing tweet {tweet['id']}: {e}")
             summaries.append(
