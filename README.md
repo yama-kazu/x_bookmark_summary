@@ -34,10 +34,12 @@ x_bookmark_summary
 下記の情報を記載した.envファイルを作成してください
 - CLIENT_ID: X API クライアント情報
 - CLIENT_SECRET: X API クライアント情報
-- REFRESH_TOKEN: X API OAuth2.0 User Context トークン
 - OPENAI_API_KEY: OpenAI APIキー
 - NOTION_DATABASE_ID: Notion データベースID
 - NOTION_API_KEY: Notion Integration Token
+
+※X APIに関する情報の取得方法は次のZennにまとめたのでそちらを参照：[X APIの利用方法](https://zenn.dev/kazu_yama/articles/f415d957f4a791)  
+※REFRESH_TOKEN: X API OAuth2.0 User Context トークン  は自動で書き込まれるため記載不要！
 
 
 ## セットアップ
