@@ -22,7 +22,9 @@ def write_to_notion(summaries: list, database_id: str):
         tweet_text = item.get("text", "")
         summary = item.get("summary", "")
 
-        output_text = f"# 元の投稿:\n{tweet_text}\n\n# 要約:\n{summary}"
+        output_text = f"# 元の投稿:\n{tweet_text}\n\n# 要約:\n{summary}"[
+            :2000
+        ]  # rich_textは2000字以内という制限があるため強制的にカット
 
         if not summary:
             logger.warning(f"Skipping tweet {tweet_id}: summary is empty")
