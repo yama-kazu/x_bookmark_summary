@@ -38,7 +38,7 @@ def summarize_tweets(tweets, model="gpt-4o", max_results=7):
             # OpenAI Responses APIを使用して要約を生成
             response = client.responses.create(
                 model=model,
-                input="以下の投稿内容および添付されているWebページの内容を要約してください。\n"
+                input="あなたは優秀なデータサイエンティストです。以下の投稿内容および添付されているWebページの内容を必ず2000字以内に要約し、有益な情報を提供してください。\n"
                 + text,
                 tools=[{"type": "web_search"}],  # Web検索を含むツールを指定
                 max_output_tokens=10000,
