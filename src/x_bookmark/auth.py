@@ -1,4 +1,6 @@
 import os
+import threading
+import time
 from urllib.parse import urlencode
 
 import requests
@@ -8,6 +10,9 @@ from flask import Flask, redirect, request
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# 認証完了フラグ
+auth_completed = threading.Event()
 
 # .env ファイルの読み込み
 load_dotenv()
@@ -47,7 +52,7 @@ def refresh_access_token(refresh_token: str):
     )
     if response.status_code != 200:
         logger.error(f"Failed to refresh token: {response.text}")
-        return None, None
+        return None
     tokens = response.json()
     if "refresh_token" in tokens:
         store_refresh_token(tokens["refresh_token"])
@@ -96,9 +101,22 @@ def start_flask_auth():
         if "refresh_token" in tokens:
             store_refresh_token(tokens["refresh_token"])
         logger.info("Authentication successful. Tokens stored.")
+
+        # 認証完了フラグをセット
+        auth_completed.set()
+
+        # Flaskサーバーをシャットダウン
+        shutdown_server()
+
         return "Authentication successful. You can close this window."
 
-    app.run(port=8080, debug=True)
+    def shutdown_server():
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()
+
+    app.run(port=8080, debug=False, use_reloader=False)
 
 
 def get_access_token():
@@ -108,5 +126,32 @@ def get_access_token():
         if access_token:
             return access_token
         logger.warning("Stored refresh token invalid, starting new auth flow...")
-    start_flask_auth()
+
+    # 認証完了フラグをリセット
+    auth_completed.clear()
+
+    # 別スレッドでFlaskサーバーを起動
+    logger.info("Starting authentication flow in browser...")
+    auth_thread = threading.Thread(target=start_flask_auth, daemon=True)
+    auth_thread.start()
+
+    # ブラウザを自動で開く
+    import webbrowser
+    time.sleep(1)  # サーバー起動を待つ
+    webbrowser.open("http://localhost:8080")
+
+    # 認証完了を待つ（最大5分）
+    logger.info("Waiting for authentication to complete...")
+    if auth_completed.wait(timeout=300):
+        # 認証完了後、.envファイルを再読み込み
+        load_dotenv(override=True)
+        # 新しいrefresh_tokenを取得
+        new_refresh_token = get_stored_refresh_token()
+        if new_refresh_token:
+            access_token = refresh_access_token(new_refresh_token)
+            if access_token:
+                logger.info("Successfully obtained access token after authentication")
+                return access_token
+
+    logger.error("Authentication failed or timed out")
     return None
