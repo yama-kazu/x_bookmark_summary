@@ -5,7 +5,14 @@ import os
 from dotenv import load_dotenv
 
 # .env をロード
-load_dotenv()
+# Cloud Run 上では /secrets/app-env にマウントされる
+ENV_PATH = "/secrets/app-env"
+
+if os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH)
+else:
+    # ローカル開発用
+    load_dotenv(".env")
 
 
 def get_env(key: str, default=None):

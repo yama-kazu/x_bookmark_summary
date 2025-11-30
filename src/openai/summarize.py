@@ -10,7 +10,14 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 # .env ファイルの読み込み
-load_dotenv()
+# Cloud Run 上では /secrets/app-env にマウントされる
+ENV_PATH = "/secrets/app-env"
+
+if os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH)
+else:
+    # ローカル開発用
+    load_dotenv(".env")
 
 # OpenAIクライアントの初期化
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
