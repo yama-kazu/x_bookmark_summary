@@ -45,13 +45,70 @@ x_bookmark_summary
 ## セットアップ
 1. リポジトリをクローン
 2. `.env` を作成して変数を設定
-3. 必要なライブラリをインストール
+
+## 実行
+### ローカル環境で実行する場合
+1. 必要なライブラリをインストール
 ```bash
 uv sync
 ```
-4. `main.py`を実行
+2. `main.py`を実行
 ```bash
 uv run main.py
+```
+
+### Cloud Run (Google Cloud)で実行する場合
+※ Google Cloudのログインは完了しているものとします  
+※ {{}}で囲んでいる変数は適宜当てはめて実行してください
+1. .env を Secret Managerに登録（今回はまとめて登録してしまいます）
+```bash
+gcloud secrets create app-env --data-file=.env
+```
+
+※ 環境変数を更新する場合
+```bash
+gcloud secrets versions add app-env --data-file=.env
+```
+
+2. Docker imageのbuild & push
+```bash
+gcloud builds submit --tag "asia-northeast1-docker.pkg.dev/{{ project_id }}/{{ artifact_repo }}/{{ image_name }}"
+```
+
+3. Cloud Run Jobs の作成（初回）
+```
+gcloud run jobs create {{ job_name }} \
+  --image="asia-northeast1-docker.pkg.dev/{{ project_id }}/{{ artifact_repo }}/{{ image_name }}" \
+  --region=asia-northeast1 \
+  --set-secrets=".env=projects/{{ project_number }}/secrets/app-env:latest"
+```
+
+※ 上書きする場合
+```bash
+gcloud run jobs update {{ job_name }} \
+  --image="asia-northeast1-docker.pkg.dev/{{ project_id }}/{{ artifact_repo }}/{{ image_name }}" \
+  --region=asia-northeast1 \
+  --set-secrets=".env=projects/{{ project_number }}/secrets/app-env:latest"
+```
+
+4. Cloud Run Jobの手動実行
+```bash
+gcloud run jobs execute {{ job_name }} --region=asia-northeast1
+```
+
+5. （参考）定期実行の設定
+まず Cloud Run Job の execution URI を取得。
+```bash
+gcloud run jobs describe {{ job_name }} --region asia-northeast1 \
+  --format="value(status.executionUri)"
+```
+その URI を使って Scheduler を作成:
+```bash
+gcloud scheduler jobs create http {{ scheduler_job_name }} \
+  --schedule="{{ cron }}" \
+  --uri="{{ job_execution_uri }}" \
+  --http-method=POST \
+  --location=asia-northeast1
 ```
 
 

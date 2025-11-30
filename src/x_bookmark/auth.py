@@ -15,7 +15,15 @@ logger = get_logger(__name__)
 auth_completed = threading.Event()
 
 # .env ファイルの読み込み
-load_dotenv()
+# Cloud Run 上では /secrets/app-env にマウントされる
+ENV_PATH = "/secrets/app-env"
+
+if os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH)
+else:
+    # ローカル開発用
+    ENV_PATH = ".env"
+    load_dotenv(ENV_PATH)
 
 CLIENT_ID = os.getenv("X_CLIENT_ID")
 CLIENT_SECRET = os.getenv("X_CLIENT_SECRET")
@@ -23,8 +31,6 @@ REDIRECT_URI = "http://localhost:8080/callback"
 TOKEN_URL = "https://api.twitter.com/2/oauth2/token"
 AUTH_URL = "https://twitter.com/i/oauth2/authorize"
 SCOPE = ["tweet.read", "users.read", "bookmark.read", "offline.access"]
-
-ENV_PATH = ".env"
 
 
 def get_stored_refresh_token():
@@ -111,9 +117,9 @@ def start_flask_auth():
         return "Authentication successful. You can close this window."
 
     def shutdown_server():
-        func = request.environ.get('werkzeug.server.shutdown')
+        func = request.environ.get("werkzeug.server.shutdown")
         if func is None:
-            raise RuntimeError('Not running with the Werkzeug Server')
+            raise RuntimeError("Not running with the Werkzeug Server")
         func()
 
     app.run(port=8080, debug=False, use_reloader=False)
@@ -137,14 +143,18 @@ def get_access_token():
 
     # ブラウザを自動で開く
     import webbrowser
-    time.sleep(1)  # サーバー起動を待つ
+
+    time.sleep(3)  # サーバー起動を待つ
     webbrowser.open("http://localhost:8080")
 
     # 認証完了を待つ（最大5分）
     logger.info("Waiting for authentication to complete...")
     if auth_completed.wait(timeout=300):
         # 認証完了後、.envファイルを再読み込み
-        load_dotenv(override=True)
+        if os.path.exists("/secrets/app-env"):
+            load_dotenv("/secrets/app-env", override=True)
+        else:
+            load_dotenv(".env", override=True)
         # 新しいrefresh_tokenを取得
         new_refresh_token = get_stored_refresh_token()
         if new_refresh_token:
